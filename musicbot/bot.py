@@ -393,10 +393,10 @@ class MusicBot(discord.Client):
                     break  # This is probably redundant
 
             if self.config.now_playing_mentions:
-                newmsg = '%s - your song **%s** is now playing in %s!' % (
+                newmsg = '%s - tu canción **%s** is jugando ahora in %s!' % (
                     entry.meta['author'].mention, entry.title, player.voice_client.channel.name)
             else:
-                newmsg = 'Now playing in %s: **%s**' % (
+                newmsg = 'Jugando ahora in %s: **%s**' % (
                     player.voice_client.channel.name, entry.title)
 
             if self.server_specific_data[channel.server]['last_np_msg']:
@@ -720,10 +720,10 @@ class MusicBot(discord.Client):
         print()
         # t-t-th-th-that's all folks!
 
-    async def cmd_help(self, command=None):
+    async def cmd_ayuda(self, command=None):
         """
         Usage:
-            {command_prefix}help [command]
+            {command_prefix}ayuda [command]
 
         Prints a help message.
         If a command is specified, it prints a help message for that command.
@@ -744,16 +744,17 @@ class MusicBot(discord.Client):
                 return Response("No such command", delete_after=10)
 
         else:
-            helpmsg = "**Commands**\n```"
+            helpmsg = "**Comandos**\n```"
             commands = []
 
             for att in dir(self):
-                if att.startswith('cmd_') and att != 'cmd_help':
+                if att.startswith('cmd_') and att != 'cmd_ayuda':
                     command_name = att.replace('cmd_', '').lower()
                     commands.append("{}{}".format(self.config.command_prefix, command_name))
 
             helpmsg += ", ".join(commands)
             helpmsg += "```"
+            helpmsg += "**Comandos ha sido modificado para usuarios españoles.**\n"
             helpmsg += "https://github.com/SexualRhinoceros/MusicBot/wiki/Commands-list"
 
             return Response(helpmsg, reply=True, delete_after=60)
@@ -842,11 +843,11 @@ class MusicBot(discord.Client):
         except:
             raise exceptions.CommandError('Invalid URL provided:\n{}\n'.format(server_link), expire_in=30)
 
-    async def cmd_play(self, player, channel, author, permissions, leftover_args, song_url):
+    async def cmd_pedir(self, player, channel, author, permissions, leftover_args, song_url):
         """
         Usage:
-            {command_prefix}play song_link
-            {command_prefix}play text to search for
+            {command_prefix}pedir song_link
+            {command_prefix}pedir text to search for
 
         Adds the song to the playlist.  If a link is not provided, the first
         result from a youtube search is added to the queue.
@@ -992,7 +993,7 @@ class MusicBot(discord.Client):
                     expire_in=30
                 )
 
-            reply_text = "Enqueued **%s** songs to be played. Position in queue: %s"
+            reply_text = "Adicional **%s** canciones para ser jugado. Posición en fila: %s"
             btext = str(listlen - drop_count)
 
         else:
@@ -1013,19 +1014,19 @@ class MusicBot(discord.Client):
                     print("[Info] Assumed url \"%s\" was a single entry, was actually a playlist" % song_url)
                     print("[Info] Using \"%s\" instead" % e.use_url)
 
-                return await self.cmd_play(player, channel, author, permissions, leftover_args, e.use_url)
+                return await self.cmd_pedir(player, channel, author, permissions, leftover_args, e.use_url)
 
-            reply_text = "Enqueued **%s** to be played. Position in queue: %s"
+            reply_text = "Adicional **%s** para ser jugado. Posición en fila: %s"
             btext = entry.title
 
         if position == 1 and player.is_stopped:
-            position = 'Up next!'
+            position = '¡Hasta la próxima!' #up next!
             reply_text %= (btext, position)
 
         else:
             try:
                 time_until = await player.playlist.estimate_time_until(position, player)
-                reply_text += ' - estimated time until playing: %s'
+                reply_text += ' - tiempo estimado hasta tocando la canción: %s'
             except:
                 traceback.print_exc()
                 time_until = ''
@@ -1128,10 +1129,10 @@ class MusicBot(discord.Client):
         return Response("Enqueued {} songs to be played in {} seconds".format(
             songs_added, self._fixg(ttime, 1)), delete_after=30)
 
-    async def cmd_search(self, player, channel, author, permissions, leftover_args):
+    async def cmd_buscar(self, player, channel, author, permissions, leftover_args):
         """
         Usage:
-            {command_prefix}search [service] [number] query
+            {command_prefix}buscar [service] [number] query
 
         Searches a service for a video and adds it to the queue.
         - service: any one of the following services:
@@ -1155,7 +1156,7 @@ class MusicBot(discord.Client):
             if not leftover_args:
                 raise exceptions.CommandError(
                     "Please specify a search query.\n%s" % dedent(
-                        self.cmd_search.__doc__.format(command_prefix=self.config.command_prefix)),
+                        self.cmd_buscar.__doc__.format(command_prefix=self.config.command_prefix)),
                     expire_in=60
                 )
 
@@ -1201,7 +1202,7 @@ class MusicBot(discord.Client):
 
         search_query = '%s%s:%s' % (services[service], items_requested, ' '.join(leftover_args))
 
-        search_msg = await self.send_message(channel, "Searching for videos...")
+        search_msg = await self.send_message(channel, "Buscando videos...")
         await self.send_typing(channel)
 
         try:
@@ -1214,49 +1215,48 @@ class MusicBot(discord.Client):
             await self.safe_delete_message(search_msg)
 
         if not info:
-            return Response("No videos found.", delete_after=30)
+            return Response("No se encontraron vídeos.", delete_after=30)
 
         def check(m):
             return (
-                m.content.lower()[0] in 'yn' or
+                m.content.lower()[:2] in ['si','no'] or
                 # hardcoded function name weeee
-                m.content.lower().startswith('{}{}'.format(self.config.command_prefix, 'search')) or
-                m.content.lower().startswith('exit'))
+                m.content.lower().startswith('{}{}'.format(self.config.command_prefix, 'buscar')) or
+                m.content.lower().startswith('salida'))
 
         for e in info['entries']:
             result_message = await self.safe_send_message(channel, "Result %s/%s: %s" % (
                 info['entries'].index(e) + 1, len(info['entries']), e['webpage_url']))
 
-            confirm_message = await self.safe_send_message(channel, "Is this ok? Type `y`, `n` or `exit`")
+            confirm_message = await self.safe_send_message(channel, "¿Esta bien? Type `si`, `no` or `salida`")
             response_message = await self.wait_for_message(30, author=author, channel=channel, check=check)
 
             if not response_message:
                 await self.safe_delete_message(result_message)
                 await self.safe_delete_message(confirm_message)
-                return Response("Ok nevermind.", delete_after=30)
+                return Response("Ok no importa.", delete_after=30)
 
             # They started a new search query so lets clean up and bugger off
             elif response_message.content.startswith(self.config.command_prefix) or \
-                    response_message.content.lower().startswith('exit'):
+                    response_message.content.lower().startswith('salida'):
 
                 await self.safe_delete_message(result_message)
                 await self.safe_delete_message(confirm_message)
                 return
-
-            if response_message.content.lower().startswith('y'):
+            if response_message.content.lower().startswith('si'):
                 await self.safe_delete_message(result_message)
                 await self.safe_delete_message(confirm_message)
                 await self.safe_delete_message(response_message)
 
-                await self.cmd_play(player, channel, author, permissions, [], e['webpage_url'])
+                await self.cmd_pedir(player, channel, author, permissions, [], e['webpage_url'])
 
-                return Response("Alright, coming right up!", delete_after=30)
+                return Response("¡Bien, ya viene!", delete_after=30)
             else:
                 await self.safe_delete_message(result_message)
                 await self.safe_delete_message(confirm_message)
                 await self.safe_delete_message(response_message)
 
-        return Response("Oh well :frowning:", delete_after=30)
+        return Response("Oh bien :frowning:", delete_after=30)
 
     async def cmd_np(self, player, channel, server, message):
         """
@@ -1276,16 +1276,16 @@ class MusicBot(discord.Client):
             prog_str = '`[%s/%s]`' % (song_progress, song_total)
 
             if player.current_entry.meta.get('channel', False) and player.current_entry.meta.get('author', False):
-                np_text = "Now Playing: **%s** added by **%s** %s\n" % (
+                np_text = "Estas escuchando: **%s** añadido por **%s** %s\n" % (
                     player.current_entry.title, player.current_entry.meta['author'].name, prog_str)
             else:
-                np_text = "Now Playing: **%s** %s\n" % (player.current_entry.title, prog_str)
+                np_text = "Estas escuchando: **%s** %s\n" % (player.current_entry.title, prog_str)
 
             self.server_specific_data[server]['last_np_msg'] = await self.safe_send_message(channel, np_text)
             await self._manual_delete_check(message)
         else:
             return Response(
-                'There are no songs queued! Queue something with {}play.'.format(self.config.command_prefix),
+                'No hay canciones en cola! Añadir una canción con {}pedir.'.format(self.config.command_prefix),
                 delete_after=30
             )
 
@@ -1391,10 +1391,10 @@ class MusicBot(discord.Client):
         player.playlist.clear()
         return Response(':put_litter_in_its_place:', delete_after=20)
 
-    async def cmd_skip(self, player, channel, author, message, permissions, voice_channel):
+    async def cmd_saltar(self, player, channel, author, message, permissions, voice_channel):
         """
         Usage:
-            {command_prefix}skip
+            {command_prefix}saltar
 
         Skips the current song when enough votes are cast, or by the bot owner.
         """
@@ -1440,9 +1440,9 @@ class MusicBot(discord.Client):
             player.skip()  # check autopause stuff here
             return Response(
                 'your skip for **{}** was acknowledged.'
-                '\nThe vote to skip has been passed.{}'.format(
+                '\nEl voto para saltar ha sido aprobado.{}'.format(
                     player.current_entry.title,
-                    ' Next song coming up!' if player.playlist.peek() else ''
+                    ' Próxima canción está llegando!' if player.playlist.peek() else ''
                 ),
                 reply=True,
                 delete_after=20
@@ -1503,10 +1503,10 @@ class MusicBot(discord.Client):
                 raise exceptions.CommandError(
                     'Unreasonable volume provided: {}%. Provide a value between 1 and 100.'.format(new_volume), expire_in=20)
 
-    async def cmd_queue(self, channel, player):
+    async def cmd_lista(self, channel, player):
         """
         Usage:
-            {command_prefix}queue
+            {command_prefix}lista
 
         Prints the current song queue.
         """
@@ -1521,14 +1521,14 @@ class MusicBot(discord.Client):
             prog_str = '`[%s/%s]`' % (song_progress, song_total)
 
             if player.current_entry.meta.get('channel', False) and player.current_entry.meta.get('author', False):
-                lines.append("Now Playing: **%s** added by **%s** %s\n" % (
+                lines.append("Estas escuchando: **%s** añadido por **%s** %s\n" % (
                     player.current_entry.title, player.current_entry.meta['author'].name, prog_str))
             else:
-                lines.append("Now Playing: **%s** %s\n" % (player.current_entry.title, prog_str))
+                lines.append("Estas escuchando: **%s** %s\n" % (player.current_entry.title, prog_str))
 
         for i, item in enumerate(player.playlist, 1):
             if item.meta.get('channel', False) and item.meta.get('author', False):
-                nextline = '`{}.` **{}** added by **{}**'.format(i, item.title, item.meta['author'].name).strip()
+                nextline = '`{}.` **{}** añadido por **{}**'.format(i, item.title, item.meta['author'].name).strip()
             else:
                 nextline = '`{}.` **{}**'.format(i, item.title).strip()
 
@@ -1542,11 +1542,11 @@ class MusicBot(discord.Client):
             lines.append(nextline)
 
         if unlisted:
-            lines.append('\n*... and %s more*' % unlisted)
+            lines.append('\n*... y %s más*' % unlisted)
 
         if not lines:
             lines.append(
-                'There are no songs queued! Queue something with {}play.'.format(self.config.command_prefix))
+                'No hay canciones en cola! Añadir una canción con {}pedir.'.format(self.config.command_prefix))
 
         message = '\n'.join(lines)
         return Response(message, delete_after=30)
@@ -1773,10 +1773,10 @@ class MusicBot(discord.Client):
         return Response(":ok_hand:", delete_after=20)
 
     @owner_only
-    async def cmd_setavatar(self, message, url=None):
+    async def cmd_cambiaravatar(self, message, url=None):
         """
         Usage:
-            {command_prefix}setavatar [url]
+            {command_prefix}cambiaravatar [url]
 
         Changes the bot's avatar.
         Attaching a file and leaving the url parameter blank also works.
@@ -1802,7 +1802,7 @@ class MusicBot(discord.Client):
         await self.disconnect_voice_client(server)
         return Response(":hear_no_evil:", delete_after=20)
 
-    async def cmd_restart(self, channel):
+    async def cmd_reiniciar(self, channel):
         await self.safe_send_message(channel, ":wave:")
         await self.disconnect_all_voice_clients()
         raise exceptions.RestartSignal
