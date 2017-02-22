@@ -1,4 +1,4 @@
-# RhinoBot: The music bot for Discord.
+# RhinoBot: The music bot for Discord. (Español fork)
 
 MusicBot is a Discord music bot written in [Python](https://www.python.org "Python homepage"). It plays requested songs and if the queue becomes empty it will play through a list of existing songs.
 
@@ -8,7 +8,14 @@ MusicBot is a Discord music bot written in [Python](https://www.python.org "Pyth
 
 ### Commands
 
-Commands are listed [here](https://github.com/SexualRhinoceros/MusicBot/wiki/Commands "Commands list").
+Commands are listed [here](https://github.com/SexualRhinoceros/MusicBot/wiki/Commands "Commands list") but with a few changes:
+* `!ayunda` (Replacement of `!help`) - list the commands
+* `!pedir` (Replacement of `!play`) - request a song by YouTube URL or query
+* `!buscar` (Replacement of `!search`) - search a song to be requested
+* `!lista` (Replacement of `!queue`) - lists the songs in the queue
+* `!saltar` (Replacement of `!skip`) - vote to skip the current song
+* `!cambiaravatar` (Replacement of `!setavatar`) - change the avatar of the bot user
+* `!reiniciar` (Replacement of `!restart`) - restarts the bot
 
 ### Configuration
 
