@@ -993,7 +993,7 @@ class MusicBot(discord.Client):
                     expire_in=30
                 )
 
-            reply_text = "Adicional **%s** canciones para ser jugado. Posición en fila: %s"
+            reply_text = "Agregadas **%s** canciones para ser reproducidas. Posición en fila: %s"
             btext = str(listlen - drop_count)
 
         else:
@@ -1016,7 +1016,7 @@ class MusicBot(discord.Client):
 
                 return await self.cmd_pedir(player, channel, author, permissions, leftover_args, e.use_url)
 
-            reply_text = "Adicional **%s** para ser jugado. Posición en fila: %s"
+            reply_text = "Agregado **%s** para ser reproducido. Posición en fila: %s"
             btext = entry.title
 
         if position == 1 and player.is_stopped:
